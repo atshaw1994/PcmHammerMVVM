@@ -24,6 +24,7 @@
 
 	<!-- Cross-platform references -->
 	<ItemGroup>
+	  <PackageReference Include="FluentIcons.Avalonia.Fluent" />
 	</ItemGroup>
 
 	<!-- Windows-only reference: completely omitted from Android builds -->

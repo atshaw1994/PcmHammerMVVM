@@ -1,0 +1,79 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PCMHammerAvalonia.ViewModels"
+             xmlns:ic="using:FluentIcons.Avalonia.Fluent"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:DataType="vm:LogTypeMenuExpanderViewModel"
+             x:Class="PCMHammerAvalonia.Views.LogTypeMenuExpander">
+    <Border HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Margin="16"
+            Height="56"
+            CornerRadius="28"
+            Background="#80000000"
+            ClipToBounds="True"
+            Width="{Binding PanelWidth}">
+
+            <Border.Transitions>
+                <Transitions>
+                    <DoubleTransition Property="Width" Duration="0:0:0.25" Easing="CubicEaseOut"/>
+                </Transitions>
+            </Border.Transitions>
+
+            <Grid ColumnDefinitions="*,56">
+                <Grid ColumnDefinitions="3*,3*,3*" 
+                      Margin="8,0"
+                      IsVisible="{Binding IsExpanded}">
+                    
+                    <Button Command="{Binding ExpandMenuCommand}"
+                            Background="Transparent"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"
+                            Padding="16,0">
+                        <ic:FluentIcon Icon="PanelLeftExpand" Foreground="White" FontSize="18" IconVariant="Filled"/>
+                    </Button>
+
+                    <Button Grid.Column="1"
+                            Command="{Binding SelectLogModeCommand}"
+                            CommandParameter="Results"
+                            Background="Transparent"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center">
+                        <TextBlock Text="Results Log" Foreground="White" FontWeight="Bold"/>
+                    </Button>
+
+                    <Button Grid.Column="2"
+                            Command="{Binding SelectLogModeCommand}"
+                            CommandParameter="Debug"
+                            Background="Transparent"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center">
+                        <TextBlock Text="Debug Log" Foreground="White" FontWeight="Bold"/>
+                    </Button>
+                </Grid>
+
+                <Button Grid.Column="1"
+                        Command="{Binding ToggleExpandCommand}"
+                        CommandParameter="{Binding $parent[UserControl].Bounds.Width}"
+                        Background="Transparent"
+                        Width="56"
+                        Height="56"
+                        CornerRadius="28"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center">
+                    <TextBlock Text="{Binding ToggleIconText}" 
+                               Foreground="White" 
+                               FontSize="18" 
+                               FontWeight="Bold"/>
+                </Button>
+            </Grid>
+        </Border>
+</UserControl>
