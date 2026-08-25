@@ -4,9 +4,9 @@ using Avalonia.Markup.Xaml;
 
 namespace PCMHammerAvalonia.Views
 {
-    public partial class LeftSideBarMenu : UserControl
+    public partial class SideBarMenu : UserControl
     {
-        public LeftSideBarMenu()
+        public SideBarMenu()
         {
             InitializeComponent();
         }

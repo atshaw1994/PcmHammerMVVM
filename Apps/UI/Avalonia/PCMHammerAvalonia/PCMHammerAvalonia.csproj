@@ -33,5 +33,10 @@
 		<ProjectReference Include="..\..\..\J2534DotNet\J2534DotNet\J2534DotNet.csproj" />
 		<ProjectReference Include="..\..\..\PcmLibraryWindowsApi\PcmLibraryWindowsApi.csproj" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Compile Update="Views\SideBarMenu.axaml.cs">
+	    <DependentUpon>SideBarMenu.axaml</DependentUpon>
+	  </Compile>
+	</ItemGroup>
 
 </Project>

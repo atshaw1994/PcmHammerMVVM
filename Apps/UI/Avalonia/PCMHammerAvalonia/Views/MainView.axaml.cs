@@ -2,6 +2,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Platform;
 using PCMHammerAvalonia.ViewModels;
 
 namespace PCMHammerAvalonia.Views;
@@ -11,13 +12,69 @@ public partial class MainView : UserControl
     public MainView()
     {
         InitializeComponent();
+
+        InitializeWebViews();
     }
 
-    private void OnBackdropTapped(object? sender, PointerPressedEventArgs e)
+    private void InitializeWebViews()
     {
-        if (DataContext is MainViewModel vm)
+        if (Design.IsDesignMode)
         {
-            vm.SidebarViewModel.ToggleSidebarCommand.Execute(null);
+            HelpViewContainer.Background = Avalonia.Media.Brushes.LightGray;
+            HelpViewContainer.Child = new TextBlock
+            {
+                Text = "Help content would be displayed here.",
+                Foreground = Avalonia.Media.Brushes.DarkGray,
+                FontSize = 24,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+            };
+            CreditsViewContainer.Background = Avalonia.Media.Brushes.LightGray;
+            CreditsViewContainer.Child = new TextBlock
+            {
+                Text = "Credits content would be displayed here.",
+                Foreground = Avalonia.Media.Brushes.DarkGray,
+                FontSize = 24,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+            };
+            return;
+        }
+
+        var helpWebView = new NativeWebView();
+        var creditsWebView = new NativeWebView();
+
+        LoadEmbeddedHtml("help.html", helpWebView);
+        LoadEmbeddedHtml("credits.html", creditsWebView);
+
+        HelpViewContainer.Child = helpWebView;
+        CreditsViewContainer.Child = creditsWebView;
+    }
+
+    private static void LoadEmbeddedHtml(string resourceName, NativeWebView browser)
+    {
+        try
+        {
+            Uri resourceUri = new($"avares://PCMHammerAvaloniaUI/{resourceName}", UriKind.Absolute);
+
+            if (AssetLoader.Exists(resourceUri))
+            {
+                using Stream stream = AssetLoader.Open(resourceUri);
+                using StreamReader reader = new(stream);
+                string htmlContent = reader.ReadToEnd();
+
+                // Pass HTML string using proper UTF-8 data URI encoding
+                browser.Source = new Uri($"data:text/html;charset=utf-8,{Uri.EscapeDataString(htmlContent)}");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"Resource not found: {resourceUri}");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading document: {ex.Message}");
         }
     }
+
 }
