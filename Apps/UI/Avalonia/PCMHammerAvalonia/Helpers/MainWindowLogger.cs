@@ -9,7 +9,7 @@ namespace PCMHammerAvalonia.Helpers;
 
 public class MainWindowLogger : ILogger, IDisposable
 {
-    private readonly MainViewModel _viewModel;
+    private readonly MainWindowViewModel _viewModel;
 
     // Thread-safe queues for log messages
     private readonly ConcurrentQueue<string> _userMessageQueue = new();
@@ -23,7 +23,7 @@ public class MainWindowLogger : ILogger, IDisposable
     private const int MaxLogLength = 500_000;
     private bool _isDisposed;
 
-    public MainWindowLogger(MainViewModel viewModel)
+    public MainWindowLogger(MainWindowViewModel viewModel)
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
 

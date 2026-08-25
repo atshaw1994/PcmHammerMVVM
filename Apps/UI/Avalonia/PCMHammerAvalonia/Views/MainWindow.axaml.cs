@@ -8,13 +8,13 @@ namespace PCMHammerAvalonia.Views;
 
 public partial class MainWindow : Window
 {
-    private readonly MainViewModel _viewModel;
+    private readonly MainWindowViewModel _viewModel;
     private bool _isCleanedUp = false;
 
     public MainWindow()
     {
         InitializeComponent();
-        _viewModel = new MainViewModel(this);
+        _viewModel = new MainWindowViewModel(this);
         DataContext = _viewModel;
 
         InitializeWebViews();
