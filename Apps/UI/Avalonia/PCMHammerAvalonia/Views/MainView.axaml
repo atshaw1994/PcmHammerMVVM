@@ -2,15 +2,47 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="using:PCMHammerAvalonia.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:vm="clr-namespace:PCMHammerAvalonia.ViewModels;assembly=PCMHammerAvalonia"
+             xmlns:views="clr-namespace:PCMHammerAvalonia.Views;assembly=PCMHammerAvalonia"
+             mc:Ignorable="d" d:DesignWidth="360" d:DesignHeight="800"
              x:Class="PCMHammerAvalonia.Views.MainView"
              x:DataType="vm:MainViewModel">
+    <!-- Design-Time DataContext for Previewer -->
     <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:MainViewModel />
     </Design.DataContext>
 
-    
+    <!-- Root grid captures edge swipes anywhere on screen -->
+    <Grid x:Name="RootGrid">
+
+        <!-- Main Log Output View -->
+        <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+                BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumLowBrush}"
+                BorderThickness="1">
+            <ScrollViewer x:Name="ResultsScrollViewer"
+                          HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto">
+                <SelectableTextBlock x:Name="ResultsLogTextBox"
+                                     Text="{Binding CurrentLogText}"
+                                     TextWrapping="Wrap" 
+                                     FontFamily="Consolas"
+                                     FontSize="14"
+                                     Margin="16"/>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Dimmed Backdrop when Sidebar is Open -->
+        <Border Background="#80000000"
+                IsVisible="{Binding SidebarViewModel.IsSidebarOverlayVisible}"
+                PointerPressed="OnBackdropTapped"/>
+
+        <!-- Slide-out Sidebar Drawer -->
+        <views:LeftSideBarMenu x:Name="SidebarDrawer"
+                               DataContext="{Binding SidebarViewModel}"/>
+
+        <!-- Expandable Bottom Drawer / FAB Overlay -->
+        <views:LogTypeMenuExpander x:Name="BottomDrawer"
+                                   IsHitTestVisible="{Binding !$parent[UserControl].DataContext.SidebarViewModel.IsSidebarOpen}"
+                                   DataContext="{Binding MenuExpanderViewModel}"/>
+    </Grid>
 </UserControl>
