@@ -15,10 +15,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="CanConversions" Type="System.String" Scope="User">
-      <Value Profile="(Default)">
-                &lt;PcmHacking.SerializableStringDictionary&gt;
-                &lt;/PcmHacking.SerializableStringDictionary&gt;
-              </Value>
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

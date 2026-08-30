@@ -1,4 +1,5 @@
 ﻿// SPDX-License-Identifier: GPL-3.0-only
+using Newtonsoft.Json;
 using PcmHacking;
 using System;
 using System.Collections.Generic;
@@ -88,6 +89,17 @@ namespace PcmHacking
             return "CanParameter_" + parameter.Name + "_Units";
         }
 
+        private Dictionary<string, string> LoadCanConversions()
+        {
+            string? json = Configuration.Settings[CanConversionSettingsKey] as string;
+            if (string.IsNullOrEmpty(json))
+            {
+                return [];
+            }
+
+            return JsonConvert.DeserializeObject<Dictionary<string, string>>(json) ?? [];
+        }
+
         private void FillCanParameterGrid()
         {
             this.initializingCanParameterGrid = true;
@@ -110,23 +122,16 @@ namespace PcmHacking
                 Conversion? selectedConversion = null;
                 try
                 {
-                    SerializableStringDictionary? dictionary = Configuration.Settings[CanConversionSettingsKey] as SerializableStringDictionary;
-                    if (dictionary == null)
-                    {
-                        dictionary = new SerializableStringDictionary();
-                        Configuration.Settings[CanConversionSettingsKey] = dictionary;
-                        Configuration.Settings.Save();
-                    }
+                    Dictionary<string, string> dictionary = this.LoadCanConversions();
 
-                    string selectedUnits = dictionary[this.GetSettingsKey(parameter)];
-                    if (selectedUnits != null)
+                    if (dictionary.TryGetValue(this.GetSettingsKey(parameter), out string? selectedUnits) && selectedUnits != null)
                     {
                         selectedConversion = parameter.Conversions.Where(x => x.Units == selectedUnits).FirstOrDefault();
                     }
                 }
                 catch (SettingsPropertyNotFoundException)
                 {
-                    Configuration.Settings[CanConversionSettingsKey] = new SerializableStringDictionary();
+                    Configuration.Settings[CanConversionSettingsKey] = JsonConvert.SerializeObject(new Dictionary<string, string>());
                 }
                 catch (Exception ex)
                 {
@@ -173,8 +178,9 @@ namespace PcmHacking
                 if (conversion.Units == conversionName)
                 {
                     parameter.SelectedConversion = conversion;
-                    SerializableStringDictionary? dictionary = Configuration.Settings[CanConversionSettingsKey] as SerializableStringDictionary;
-                    if (dictionary != null) { dictionary[this.GetSettingsKey(parameter)] = conversion.Units; }
+                    Dictionary<string, string> dictionary = this.LoadCanConversions();
+                    dictionary[this.GetSettingsKey(parameter)] = conversion.Units;
+                    Configuration.Settings[CanConversionSettingsKey] = JsonConvert.SerializeObject(dictionary);
                     Configuration.Settings.Save();
                     this.AddDebugMessage($"Changed CAN parameter ${parameter.Name} units to ${conversion.Units}");
                     break;
