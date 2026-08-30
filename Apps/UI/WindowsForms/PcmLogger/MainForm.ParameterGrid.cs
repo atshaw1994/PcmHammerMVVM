@@ -18,6 +18,100 @@ namespace PcmHacking
         private ParameterDatabase database = null!;
         private bool suspendSelectionEvents = true;
 
+        /// <summary>
+        /// Strongly-typed view over a parameterGrid row. Centralizes the cell-index math
+        /// and unchecked casts that used to be scattered across this file.
+        /// </summary>
+        private readonly struct ParameterRow
+        {
+            private readonly DataGridViewRow row;
+
+            public ParameterRow(DataGridViewRow row)
+            {
+                this.row = row;
+            }
+
+            public bool Enabled
+            {
+                get => this.row.Cells[CellIndexEnable].Value is bool value && value;
+                set => this.row.Cells[CellIndexEnable].Value = value;
+            }
+
+            public bool Zoom
+            {
+                get => this.row.Cells[CellIndexZoom].Value is bool value && value;
+                set => this.row.Cells[CellIndexZoom].Value = value;
+            }
+
+            public Parameter Parameter
+            {
+                get => (Parameter)this.row.Cells[CellIndexParameter].Value;
+                set => this.row.Cells[CellIndexParameter].Value = value;
+            }
+
+            /// <summary>
+            /// Same as <see cref="Parameter"/>, but returns null instead of throwing if the
+            /// cell doesn't (yet) contain a Parameter.
+            /// </summary>
+            public Parameter? ParameterOrDefault => this.row.Cells[CellIndexParameter].Value as Parameter;
+
+            public bool Visible
+            {
+                get => this.row.Visible;
+                set => this.row.Visible = value;
+            }
+
+            private DataGridViewComboBoxCell UnitsCell => (DataGridViewComboBoxCell)this.row.Cells[CellIndexUnits];
+
+            public void InitializeUnitsCell(IEnumerable<Conversion> conversions, Conversion defaultConversion)
+            {
+                DataGridViewComboBoxCell cell = this.UnitsCell;
+                cell.DisplayMember = "Units";
+                cell.ValueMember = "Units";
+
+                foreach (Conversion conversion in conversions)
+                {
+                    cell.Items.Add(conversion);
+                }
+
+                cell.Value = defaultConversion;
+            }
+
+            public void SelectConversion(Conversion profileConversion, string profileUnits)
+            {
+                DataGridViewComboBoxCell cell = this.UnitsCell;
+                foreach (Conversion conversion in cell.Items)
+                {
+                    if ((conversion == profileConversion) || (conversion.Units == profileUnits))
+                    {
+                        cell.Value = conversion;
+                        return;
+                    }
+                }
+            }
+
+            public Conversion? GetSelectedConversion()
+            {
+                DataGridViewComboBoxCell cell = this.UnitsCell;
+                string? selectedUnits = cell.Value as string;
+
+                foreach (Conversion candidate in cell.Items)
+                {
+                    // The fact that we have to do both kinds of comparisons here really
+                    // seems like a bug in the DataGridViewComboBoxCell code:
+                    if ((candidate.Units == selectedUnits) || (candidate == cell.Value as Conversion))
+                    {
+                        return candidate;
+                    }
+                }
+
+                return null;
+            }
+        }
+
+        private IEnumerable<ParameterRow> ParameterRows =>
+            this.parameterGrid.Rows.Cast<DataGridViewRow>().Select(row => new ParameterRow(row));
+
         private void FillParameterGrid()
         {
             // First, empty the grid.
@@ -33,27 +127,16 @@ namespace PcmHacking
 
             foreach (Parameter parameter in this.database.ListParametersBySupportedOs(osid))
             {
-                DataGridViewRow row = new DataGridViewRow();
+                DataGridViewRow gridRow = new DataGridViewRow();
+                gridRow.CreateCells(this.parameterGrid);
 
-                row.CreateCells(this.parameterGrid);
+                ParameterRow row = new ParameterRow(gridRow);
+                row.Enabled = false;
+                row.Zoom = false;
+                row.Parameter = parameter;
+                row.InitializeUnitsCell(parameter.Conversions, parameter.Conversions.First());
 
-                row.Cells[CellIndexEnable].Value = false; // enabled
-                row.Cells[CellIndexZoom].Value = false; // zoom
-                row.Cells[CellIndexParameter].Value = parameter;
-
-                DataGridViewComboBoxCell unitsCell = (DataGridViewComboBoxCell)row.Cells[CellIndexUnits];
-
-                unitsCell.DisplayMember = "Units";
-                unitsCell.ValueMember = "Units";
-
-                foreach (Conversion conversion in parameter.Conversions)
-                {
-                    unitsCell.Items.Add(conversion);
-                }
-
-                unitsCell.Value = parameter.Conversions.First();
-
-                this.parameterGrid.Rows.Add(row);
+                this.parameterGrid.Rows.Add(gridRow);
             }
 
             this.suspendSelectionEvents = false;
@@ -70,36 +153,27 @@ namespace PcmHacking
             {
                 this.suspendSelectionEvents = true;
 
-                foreach (DataGridViewRow row in this.parameterGrid.Rows)
+                foreach (ParameterRow row in this.ParameterRows)
                 {
-                    row.Cells[CellIndexEnable].Value = false;
-                    row.Cells[CellIndexZoom].Value = false;
+                    row.Enabled = false;
+                    row.Zoom = false;
                 }
 
                 foreach (LogColumn column in this.currentProfile.Columns)
                 {
-                    DataGridViewRow row = this.parameterGrid.Rows.Cast<DataGridViewRow>().FirstOrDefault(
-                        r => r.Cells[CellIndexParameter].Value == column.Parameter);
+                    DataGridViewRow? gridRow = this.parameterGrid.Rows.Cast<DataGridViewRow>().FirstOrDefault(
+                        r => new ParameterRow(r).Parameter == column.Parameter);
 
-                    if (row != null)
+                    if (gridRow != null)
                     {
-                        row.Cells[CellIndexEnable].Value = true;
+                        ParameterRow row = new ParameterRow(gridRow);
+                        row.Enabled = true;
                         if (column.Zoom)
                         {
-                            row.Cells[CellIndexZoom].Value = true;
+                            row.Zoom = true;
                         }
 
-                        DataGridViewComboBoxCell cell = (DataGridViewComboBoxCell)(row.Cells[CellIndexUnits]);
-                        Conversion profileConversion = column.Conversion;
-                        string profileUnits = column.Conversion.Units;
-
-                        foreach (Conversion conversion in cell.Items)
-                        {
-                            if ((conversion == profileConversion) || (conversion.Units == profileUnits))
-                            {
-                                cell.Value = conversion;
-                            }
-                        }
+                        row.SelectConversion(column.Conversion, column.Conversion.Units);
                     }
                 }
             }
@@ -127,9 +201,8 @@ namespace PcmHacking
             // parameter is enabled, but DataGridView doesn't support that.
             if (this.parameterGrid.CurrentCell.ColumnIndex == CellIndexZoom)
             {
-                int rowIndex = this.parameterGrid.CurrentCell.RowIndex;
-                DataGridViewCell enabledCell = this.parameterGrid.Rows[rowIndex].Cells[CellIndexEnable];
-                if ((bool)enabledCell.Value == false)
+                ParameterRow row = new ParameterRow(this.parameterGrid.Rows[this.parameterGrid.CurrentCell.RowIndex]);
+                if (!row.Enabled)
                 {
                     this.parameterGrid.CancelEdit();
                     return;
@@ -169,28 +242,12 @@ namespace PcmHacking
         {
             this.ResetProfile();
 
-            foreach (DataGridViewRow row in this.parameterGrid.Rows)
+            foreach (ParameterRow row in this.ParameterRows)
             {
-                if ((bool)row.Cells[CellIndexEnable].Value == true)
+                if (row.Enabled)
                 {
-                    Parameter parameter = (Parameter)row.Cells[CellIndexParameter].Value;
-                    Conversion? conversion = null;
-
-                    DataGridViewComboBoxCell cell = (DataGridViewComboBoxCell)(row.Cells[CellIndexUnits]);
-                    foreach (Conversion candidate in cell.Items)
-                    {
-                        // The fact that we have to do both kinds of comparisons here really
-                        // seems like a bug in the DataGridViewComboBoxCell code:
-                        if ((candidate.Units == cell.Value as string) ||
-                            (candidate == cell.Value as Conversion))
-                        {
-                            conversion = candidate;
-                            break;
-                        }
-                    }
-
-                    bool zoom = (bool)row.Cells[CellIndexZoom].Value;
-                    LogColumn column = new LogColumn(parameter, conversion!, zoom);
+                    Conversion? conversion = row.GetSelectedConversion();
+                    LogColumn column = new LogColumn(row.Parameter, conversion!, row.Zoom);
                     this.currentProfile.AddColumn(column);
                 }
             }
@@ -232,22 +289,15 @@ namespace PcmHacking
                 return;
             }
 
-            foreach (DataGridViewRow row in this.parameterGrid.Rows)
+            foreach (ParameterRow row in this.ParameterRows)
             {
-                Parameter? parameter = row.Cells[CellIndexParameter].Value as Parameter;
+                Parameter? parameter = row.ParameterOrDefault;
                 if (parameter == null)
                 {
                     continue;
                 }
-                
-                if (parameter.Name.IndexOf(this.parameterSearch.Text, StringComparison.CurrentCultureIgnoreCase) == -1)
-                {
-                    row.Visible = false;
-                }
-                else
-                {
-                    row.Visible = true;
-                }
+
+                row.Visible = parameter.Name.IndexOf(this.parameterSearch.Text, StringComparison.CurrentCultureIgnoreCase) != -1;
             }
         }
         #endregion
