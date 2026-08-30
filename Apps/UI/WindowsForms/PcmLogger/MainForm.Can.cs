@@ -91,8 +91,7 @@ namespace PcmHacking
 
         private Dictionary<string, string> LoadCanConversions()
         {
-            string? json = Configuration.Settings[CanConversionSettingsKey] as string;
-            if (string.IsNullOrEmpty(json))
+            if (Configuration.Settings[CanConversionSettingsKey] is not string json || json.Length == 0)
             {
                 return [];
             }
