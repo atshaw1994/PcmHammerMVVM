@@ -67,6 +67,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PCMHammerAvalonia.Desktop",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PCMHammerAvalonia.Android", "UI\Avalonia\PCMHammerAvalonia.Android\PCMHammerAvalonia.Android.csproj", "{5E968E9A-AF1A-4796-B9BC-786DED99CE5D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PCMHammerAvalonia.Linux", "UI\Avalonia\PCMHammerAvalonia.Linux\PCMHammerAvalonia.Linux.csproj", "{A2EBC922-B225-3952-8474-FEA4A2CCFB7F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -296,6 +298,18 @@ Global
 		{5E968E9A-AF1A-4796-B9BC-786DED99CE5D}.Release|x64.Build.0 = Release|Any CPU
 		{5E968E9A-AF1A-4796-B9BC-786DED99CE5D}.Release|x86.ActiveCfg = Release|Any CPU
 		{5E968E9A-AF1A-4796-B9BC-786DED99CE5D}.Release|x86.Build.0 = Release|Any CPU
+		{A2EBC922-B225-3952-8474-FEA4A2CCFB7F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2EBC922-B225-3952-8474-FEA4A2CCFB7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2EBC922-B225-3952-8474-FEA4A2CCFB7F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A2EBC922-B225-3952-8474-FEA4A2CCFB7F}.Debug|x64.Build.0 = Debug|Any CPU
+		{A2EBC922-B225-3952-8474-FEA4A2CCFB7F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A2EBC922-B225-3952-8474-FEA4A2CCFB7F}.Debug|x86.Build.0 = Debug|Any CPU
+		{A2EBC922-B225-3952-8474-FEA4A2CCFB7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2EBC922-B225-3952-8474-FEA4A2CCFB7F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A2EBC922-B225-3952-8474-FEA4A2CCFB7F}.Release|x64.ActiveCfg = Release|Any CPU
+		{A2EBC922-B225-3952-8474-FEA4A2CCFB7F}.Release|x64.Build.0 = Release|Any CPU
+		{A2EBC922-B225-3952-8474-FEA4A2CCFB7F}.Release|x86.ActiveCfg = Release|Any CPU
+		{A2EBC922-B225-3952-8474-FEA4A2CCFB7F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -318,6 +332,7 @@ Global
 		{0B0B4539-2D8D-435B-B018-6F3EC8C65A86} = {0E01ECFE-3353-4D95-91C7-BB62A2F58FDF}
 		{87A08EFD-B9DD-46F0-9F5D-0AF7FE8C0C29} = {0E01ECFE-3353-4D95-91C7-BB62A2F58FDF}
 		{5E968E9A-AF1A-4796-B9BC-786DED99CE5D} = {0E01ECFE-3353-4D95-91C7-BB62A2F58FDF}
+		{A2EBC922-B225-3952-8474-FEA4A2CCFB7F} = {0E01ECFE-3353-4D95-91C7-BB62A2F58FDF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E19457D5-96EB-4FDE-A87C-B4B72B547EEE}
