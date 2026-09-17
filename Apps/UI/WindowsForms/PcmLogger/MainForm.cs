@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,6 +31,16 @@ namespace PcmHacking
         public MainForm()
         {
             InitializeComponent();
+
+            // The window/taskbar icon isn't set by the designer, so pull the
+            // icon that's already embedded in the executable (via
+            // ApplicationIcon in the project file) instead of duplicating it.
+            this.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+
+            // Segoe UI renders more crisply than the designer's default
+            // "Microsoft Sans Serif" on modern Windows versions and matches
+            // the rest of the OS chrome.
+            this.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
         }
 
         #region MainFormBase override methods
