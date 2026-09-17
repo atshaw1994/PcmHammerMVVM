@@ -1,6 +1,6 @@
 ﻿using Avalonia;
 
-namespace PCMHammerAvalonia.Desktop;
+namespace PCMHammerAvalonia.Linux;
 
 sealed class Program
 {
