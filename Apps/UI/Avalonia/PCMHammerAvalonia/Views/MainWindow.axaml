@@ -4,9 +4,6 @@
         x:Class="PCMHammerAvalonia.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/0411_256px.ico"
-        TransparencyLevelHint="Mica, AcrylicBlur"
-        Background="Transparent"
-        ExtendClientAreaToDecorationsHint="True"
         Title="PCM Hammer" Height="638" Width="800"
         Closing="Window_Closing">
 
@@ -22,10 +19,12 @@
         <vm:MainViewModel />
     </Design.DataContext>
 
-    <Grid RowDefinitions="auto,*,auto" Margin="0,30,0,0">
+    <Grid x:Name="RootGrid" RowDefinitions="auto,*,auto">
         <!-- Main Navigation Menu -->
-        <Border BorderBrush="{DynamicResource ControlElevationBorderBrush}"
-                BorderThickness="0,0,0,1">
+        <Border Background="Transparent"
+                BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+                BorderThickness="0,0,0,1"
+                PointerPressed="Border_PointerPressed">
             <Menu Margin="0,-4" HorizontalAlignment="Left">
                 <MenuItem Header="_File">
                     <MenuItem Header="Save _Results Log"     Command="{Binding SaveResultsLogCommand}"/>

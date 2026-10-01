@@ -112,8 +112,8 @@ namespace PCMHammerAvalonia.ViewModels
 
         public async Task ExecuteAcceptAndClose()
         {
-            await TestSelectedDeviceAsync();
-            if (SelectedDevice != null && !string.IsNullOrEmpty(DeviceCategory))
+            bool initialized = await TestSelectedDeviceAsync();
+            if (initialized && SelectedDevice != null && !string.IsNullOrEmpty(DeviceCategory))
             {
                 _settingsService.Settings.SavedDeviceType = DeviceCategory;
                 if (DeviceCategory.Equals("Serial", StringComparison.Ordinal))
@@ -132,8 +132,11 @@ namespace PCMHammerAvalonia.ViewModels
                 _settingsService.SaveSettings();
                 RequestAcceptAndClose?.Invoke();
             }
-            else
+            else if (string.IsNullOrEmpty(DeviceCategory))
             {
+                // The only failure path TestSelectedDeviceAsync doesn't already report a specific
+                // reason for; every other failure (timeout, create failed, exception, etc.) leaves
+                // its own message in StatusText, which must not be clobbered here.
                 StatusText = "Device test failed or invalid selection.";
             }
         }
@@ -188,8 +191,11 @@ namespace PCMHammerAvalonia.ViewModels
             {
                 // Guard the test with a timeout: a defunct port (e.g. a stale Bluetooth COM
                 // port) can make Initialize() hang, which would otherwise freeze the dialog.
+                // The full DVI handshake (open, reset, board info, CAN check, voltage, protocol,
+                // DVI setup) can legitimately take longer than a few seconds over slower USB/VM
+                // passthrough, so this is generous rather than tight.
                 Task<bool> initializeTask = device.Initialize();
-                bool completed = await initializeTask.AwaitWithTimeout(TimeSpan.FromSeconds(5));
+                bool completed = await initializeTask.AwaitWithTimeout(TimeSpan.FromSeconds(20));
                 if (!completed)
                 {
                     StatusText = "Timed out testing " + description + ".";
@@ -496,13 +502,17 @@ namespace PCMHammerAvalonia.ViewModels
             }
         }
 
-        public async Task TestSelectedDeviceAsync()
+        public async Task<bool> TestSelectedDeviceAsync()
         {
             Device? device = null;
             string target;
             string onPort = string.Empty;
 
-            if (SerialPort == null) return;
+            if (SerialPort == null)
+            {
+                StatusText = "Choose a serial port first.";
+                return false;
+            }
 
             var match = SerialPortRegex().Match(SerialPort!.PortName!);
             if (match.Success && SerialPort.PortName!.Length > 4)
@@ -531,7 +541,7 @@ namespace PCMHammerAvalonia.ViewModels
                 {
                     await ShowInfoAlertAsync("Choose a device to test first.", "Test Device");
                 }
-                return;
+                return false;
             }
 
             if (device == null)
@@ -541,18 +551,20 @@ namespace PCMHammerAvalonia.ViewModels
                 {
                     await ShowErrorAlertAsync($"FAIL{Environment.NewLine}{Environment.NewLine}Could not create {target}.", "Test Device");
                 }
-                return;
+                return false;
             }
 
             string description = device.GetDeviceType() + onPort;
             IsBusy = true;
             StatusText = $"Testing {device.GetDeviceType()}...";
+            bool success = false;
 
             try
             {
+                // See the comment in ExecuteTestSelectedDevice: a full DVI handshake over
+                // USB/VM passthrough can legitimately take longer than a few seconds.
                 Task<bool> initializeTask = device.Initialize();
-                bool completed = await initializeTask.AwaitWithTimeout(TimeSpan.FromSeconds(5));
-                SelectedDevice = device;
+                bool completed = await initializeTask.AwaitWithTimeout(TimeSpan.FromSeconds(20));
                 if (!completed)
                 {
                     StatusText = $"Timed out testing {description}.";
@@ -564,6 +576,8 @@ namespace PCMHammerAvalonia.ViewModels
                 else if (initializeTask.Result)
                 {
                     StatusText = $"{description} test OK.";
+                    success = true;
+                    SelectedDevice = device;
 
                     if (ShowInfoAlertAsync != null)
                     {
@@ -590,7 +604,16 @@ namespace PCMHammerAvalonia.ViewModels
             finally
             {
                 IsBusy = false;
+                // Only a successfully initialized device is kept open; any other outcome
+                // (timeout, failure, exception) must dispose the device/port here, since
+                // nothing else owns it in that case.
+                if (!success)
+                {
+                    device.Dispose();
+                }
             }
+
+            return success;
         }
 
         [GeneratedRegex(@"COM\d+")]

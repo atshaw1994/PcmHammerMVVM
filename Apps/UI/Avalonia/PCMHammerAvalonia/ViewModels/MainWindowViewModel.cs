@@ -949,7 +949,10 @@ public partial class MainWindowViewModel : ObservableObject
             _logger
         );
 
-        Vehicle = new Vehicle(workingDevice, protocolEngine, _logger, notifier, "PCMHammer")
+        // Empty base path: the library resolves kernels from AppContext.BaseDirectory (next to the
+        // exe, where BuildAll deploys them), matching WinForms/WPF. A literal here would look in a
+        // relative folder that doesn't exist and fail with "Invalid directory".
+        Vehicle = new Vehicle(workingDevice, protocolEngine, _logger, notifier, string.Empty)
         {
             Enable4xReadWrite = Enable4xCom
         };
