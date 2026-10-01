@@ -33,14 +33,14 @@
                             <ic:FluentIcon Name="PART_CopyIcon" 
                                            Icon="Copy" 
                                            FontSize="14"
-                                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                         
                             <!-- Success Checkmark Icon (Hidden initially) -->
                             <ic:FluentIcon Name="PART_CheckIcon" 
                                            Icon="Checkmark" 
                                            FontSize="14"
                                            Opacity="0"
-                                           Foreground="{DynamicResource SystemControlForegroundAccentBrush}"/>
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                         </Panel>
                     </Border>
                 </ControlTemplate>
