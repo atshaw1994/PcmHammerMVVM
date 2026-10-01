@@ -28,9 +28,24 @@
 	  <PackageReference Include="FluentIcons.Avalonia.Fluent" />
 	</ItemGroup>
 
+	<PropertyGroup>
+		<!-- J2534DotNet and PcmLibraryWindowsApi only multi-target net48;net10.0-windows and are
+			 resolved via the net48 fallback on non-Windows builds (NU1702). Their Windows-only
+			 P/Invokes (kernel32.dll, J2534 pass-thru drivers) have no Linux equivalent, so on
+			 Linux builds we still reference them (so the app compiles) but define LINUX_CLI so
+			 call sites in this project skip the Windows-only code paths at compile time,
+			 matching the existing LINUX_CLI pattern used by PcmLibraryWindowsApi and the
+			 Linux CLI projects. -->
+		<DefineConstants Condition="'$(RuntimeIdentifier)' != '' And $(RuntimeIdentifier.StartsWith('linux'))">$(DefineConstants);LINUX_CLI</DefineConstants>
+	</PropertyGroup>
+
+	<!-- Cross-platform reference: always included -->
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\PcmLibrary\PcmLibrary.csproj" />
+	</ItemGroup>
+
 	<!-- Windows-only reference: completely omitted from Android builds -->
 	<ItemGroup Condition="'$(TargetPlatformIdentifier)' != 'android'">
-		<ProjectReference Include="..\..\..\PcmLibrary\PcmLibrary.csproj" />
 		<ProjectReference Include="..\..\..\J2534DotNet\J2534DotNet\J2534DotNet.csproj" />
 		<ProjectReference Include="..\..\..\PcmLibraryWindowsApi\PcmLibraryWindowsApi.csproj" />
 	</ItemGroup>

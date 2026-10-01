@@ -34,6 +34,8 @@
                     <RadioButton x:Name="J2534DeviceRadioButton" 
                                  GroupName="DeviceCategory" 
                                  Content="J2534 Device"
+                                 IsEnabled="{Binding IsJ2534Supported}"
+                                 ToolTip.Tip="{Binding J2534UnsupportedTooltip}"
                                  IsChecked="{Binding IsJ2534DeviceSelected, Mode=TwoWay}"/>
                 </StackPanel>
             </HeaderedContentControl>

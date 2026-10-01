@@ -4,6 +4,7 @@ using PcmHacking;
 using PCMHammerAvalonia.Services;
 using PCMHammerAvalonia.Views;
 using System.Collections.ObjectModel;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 namespace PCMHammerAvalonia.ViewModels
@@ -18,6 +19,13 @@ namespace PCMHammerAvalonia.ViewModels
         #region Properties
         [ObservableProperty]
         public partial string? DeviceCategory { get; set; }
+
+        /// <summary>
+        /// J2534 pass-thru devices require Windows-only vendor drivers and are not usable on Linux.
+        /// </summary>
+        public bool IsJ2534Supported => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
+        public string? J2534UnsupportedTooltip => IsJ2534Supported ? null : "Not supported on Linux";
 
         [ObservableProperty]
         public partial string? J2534DeviceType { get; set; }
@@ -91,8 +99,11 @@ namespace PCMHammerAvalonia.ViewModels
         public ObservableCollection<object> J2534Devices { get; } = [];
 
         // Notification States
-        public string StatusText { get; set; } = "Ready.";
-        public bool IsBusy { get; set; }
+        [ObservableProperty]
+        public partial string StatusText { get; set; } = "Ready.";
+
+        [ObservableProperty]
+        public partial bool IsBusy { get; set; }
 
         // Callbacks for View-layer UI alerts (decouples MessageBox.Show)
         public Func<string, string, Task>? ShowWarningAlertAsync { get; set; }
@@ -141,11 +152,13 @@ namespace PCMHammerAvalonia.ViewModels
                 onPort = " on " + (SerialPort!.PortName ?? "(no port)");
                 target = (SerialPortDeviceType ?? "serial device") + onPort;
             }
+            #if !LINUX_CLI
             else if (DeviceCategory == DeviceConfiguration.Constants.DeviceCategoryJ2534)
             {
                 device = DeviceFactory.CreateJ2534Device(J2534DeviceType, logger);
                 target = J2534DeviceType ?? "J2534 device";
             }
+#endif
             else
             {
                 StatusText = "No device specified.";
@@ -338,19 +351,19 @@ namespace PCMHammerAvalonia.ViewModels
             }
 
             // Apply persistent user configurations
-            if (DeviceConfiguration.Settings.DeviceCategory.Equals("Serial") && SerialDevices.Count > 1)
+            if (_settingsService.Settings.SavedDeviceType.Equals("Serial") && SerialDevices.Count > 1)
             {
                 DeviceCategory = "Serial";
             }
-            else if (DeviceConfiguration.Settings.DeviceCategory.Equals("J2534") && J2534Devices.Count > 1)
+            else if (_settingsService.Settings.SavedDeviceType.Equals("J2534") && J2534Devices.Count > 1)
             {
                 DeviceCategory = "J2534";
             }
 
-            SerialPort = SerialPorts.FirstOrDefault(p => p.PortName == DeviceConfiguration.Settings.SerialPort);
-            SerialPortDeviceType = DeviceConfiguration.Settings.SerialPortDeviceType;
-            J2534DeviceType = DeviceConfiguration.Settings.J2534DeviceType;
-            Enable4xReadWrite = DeviceConfiguration.Settings.Enable4xReadWrite;
+            SerialPort = SerialPorts.FirstOrDefault(p => p.PortName == _settingsService.Settings.SavedSerialPort);
+            SerialPortDeviceType = _settingsService.Settings.SavedSerialDevice;
+            J2534DeviceType = _settingsService.Settings.SavedJ2534Device;
+            Enable4xReadWrite = _settingsService.Settings.SavedDevice4xCommunicationEnabled;
             StatusText = "Ready.";
         }
 
@@ -373,7 +386,7 @@ namespace PCMHammerAvalonia.ViewModels
             }
             catch (TimeoutException)
             {
-                string savedPort = DeviceConfiguration.Settings.SerialPort;
+                string savedPort = _settingsService.Settings.SavedSerialPort;
                 StatusText = string.IsNullOrEmpty(savedPort)
                     ? "Timed out listing serial ports - a disconnected device may be stuck. Try a different port."
 
@@ -388,6 +401,7 @@ namespace PCMHammerAvalonia.ViewModels
 
         private async Task AddDiscoveredJ2534DevicesAsync()
         {
+#if !LINUX_CLI
             try
             {
                 Task<List<J2534DotNet.J2534Device>> devicesTask = Task.Run(() => J2534DeviceFinder.FindInstalledJ2534DLLs(logger));
@@ -399,7 +413,7 @@ namespace PCMHammerAvalonia.ViewModels
                 }
                 else
                 {
-                    string savedDevice = DeviceConfiguration.Settings.J2534DeviceType;
+                    string savedDevice = _settingsService.Settings.SavedJ2534Device;
                     StatusText = string.IsNullOrEmpty(savedDevice)
                         ? "Timed out listing J2534 devices - a driver may be stuck. Try a different device."
                         : $"Timed out listing J2534 devices - the saved device {savedDevice} may have a stuck driver. Avoid it and choose a different device.";
@@ -410,6 +424,11 @@ namespace PCMHammerAvalonia.ViewModels
                 logger.AddDebugMessage("Failed to list J2534 devices: " + ex.ToString());
                 StatusText = "Unable to list J2534 devices: " + ex.Message;
             }
+#else
+            // J2534 pass-thru requires Windows-only vendor drivers; not available on Linux.
+            J2534Devices.Clear();
+            await Task.CompletedTask;
+#endif
         }
 
         public async Task AutoDetectSerialAsync()
@@ -498,11 +517,13 @@ namespace PCMHammerAvalonia.ViewModels
                 onPort = " on " + (SerialPort!.PortName! ?? "(no port)");
                 target = (SerialPortDeviceType ?? "serial device") + onPort;
             }
+            #if !LINUX_CLI
             else if (IsJ2534DeviceSelected)
             {
                 device = DeviceFactory.CreateJ2534Device(J2534DeviceType, logger);
                 target = J2534DeviceType ?? "J2534 device";
             }
+#endif
             else
             {
                 StatusText = "No device specified.";

@@ -3,6 +3,7 @@ using Avalonia.Interactivity;
 using PcmHacking;
 using PCMHammerAvalonia.Services;
 using PCMHammerAvalonia.ViewModels;
+using System;
 
 namespace PCMHammerAvalonia.Views.DialogBoxes;
 
@@ -36,7 +37,14 @@ public partial class DevicePickerDialogBox : Window
     {
         if (_viewModel != null)
         {
-            await _viewModel.InitializeAsync();
+            try
+            {
+                await _viewModel.InitializeAsync();
+            }
+            catch (Exception ex)
+            {
+                _viewModel.StatusText = $"Device discovery failed: {ex.Message}";
+            }
         }
     }
 
