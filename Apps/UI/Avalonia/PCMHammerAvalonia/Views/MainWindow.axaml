@@ -198,6 +198,7 @@
                     <!-- Progress Bar -->
                     <ProgressBar x:Name="ProgressBar" 
                                  Value="{Binding ProgressPercent}" 
+                                 IsVisible="{Binding IsOperationRunning}"
                                  Minimum="0"
                                  Maximum="100" 
                                  Width="150" 
