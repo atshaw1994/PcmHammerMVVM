@@ -32,6 +32,19 @@ public partial class MainWindowViewModel : ObservableObject
     public partial PcmReader? PcmReader { get; set; }
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ReInitializeDeviceCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ReadPCMCommand))]
+    [NotifyCanExecuteChangedFor(nameof(VerifyPCMCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ChangeVINCommand))]
+    [NotifyCanExecuteChangedFor(nameof(WriteParametersCommand))]
+    [NotifyCanExecuteChangedFor(nameof(WriteOSCalibrationBootCommand))]
+    [NotifyCanExecuteChangedFor(nameof(WriteFullFlashCloneCommand))]
+    [NotifyCanExecuteChangedFor(nameof(BruteForceUnlockCommand))]
+    [NotifyCanExecuteChangedFor(nameof(HaltRunningKernelCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ReadPropertiesCommand))]
+    [NotifyCanExecuteChangedFor(nameof(WritePCMCommand))]
+    [NotifyCanExecuteChangedFor(nameof(TestWriteCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CancelCurrentCommand))]
     public partial Device? SelectedDevice { get; set; }
 
     [ObservableProperty]
@@ -238,32 +251,44 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     public async Task SelectDevice()
     {
-        Window? owner = null;
-        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-            owner = desktop.MainWindow;
-
-        var dialog = new DevicePickerDialogBox(_logger, _settingsService);
-
-        StatusText = "Selecting Device...";
-
-        // Pass 'this' (the current parent window) to make it modal
-        bool? result = await dialog.ShowDialog<bool?>(owner!);
-
-        if (result == true)
+        try
         {
-            Device? workingDevice = dialog.SelectedDevice;
-            bool enable4xReadWrite = dialog.Enable4xReadWrite;
+            Window? owner = null;
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                owner = desktop.MainWindow;
 
-            if (workingDevice != null)
+            var dialog = new DevicePickerDialogBox(_logger, _settingsService);
+
+            StatusText = "Selecting Device...";
+
+            // Pass 'this' (the current parent window) to make it modal
+            bool? result = await dialog.ShowDialog<bool?>(owner!);
+
+            if (result == true)
             {
-                // Pass the device directly into shared configuration helper
-                InitializeDeviceAndVehicle(workingDevice, enable4xReadWrite);
+                Device? workingDevice = dialog.SelectedDevice;
+                bool enable4xReadWrite = dialog.Enable4xReadWrite;
+
+                if (workingDevice != null)
+                {
+                    // Pass the device directly into shared configuration helper
+                    InitializeDeviceAndVehicle(workingDevice, enable4xReadWrite);
+                }
+                else
+                {
+                    _logger.AddDebugMessage("Dialog returned OK, but no valid device data was stored.");
+                }
+                StatusText = "Ready";
             }
             else
             {
-                _logger.AddDebugMessage("Dialog returned OK, but no valid device data was stored.");
+                StatusText = "Ready";
             }
-            StatusText = "Ready";
+        }
+        catch (Exception ex)
+        {
+            _logger.AddDebugMessage($"SelectDevice failed: {ex}");
+            StatusText = $"Error selecting device: {ex.Message}";
         }
     }
 
