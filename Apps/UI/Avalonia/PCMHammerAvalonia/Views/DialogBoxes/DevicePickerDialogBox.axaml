@@ -42,7 +42,7 @@
 
             <!-- Serial Device Options -->
             <HeaderedContentControl Header="Serial Device Options" 
-                                    IsEnabled="{Binding #SerialDeviceRadioButton.IsChecked}">
+                                    IsVisible="{Binding #SerialDeviceRadioButton.IsChecked}">
                 <StackPanel Margin="5" Spacing="4">
                     <Label Content="Serial Port" 
                            Target="{Binding #SerialPortComboBox}"/>
@@ -62,7 +62,7 @@
 
             <!-- J2534 Device Options -->
             <HeaderedContentControl Header="J2534 Device Options" 
-                                    IsEnabled="{Binding #J2534DeviceRadioButton.IsChecked}">
+                                    IsVisible="{Binding #J2534DeviceRadioButton.IsChecked}">
                 <StackPanel Margin="5" Spacing="4">
                     <Label Content="Device Type" 
                            Target="{Binding #J2534DeviceTypeComboBox}"/>
@@ -82,10 +82,10 @@
                         HorizontalAlignment="Right" 
                         Spacing="5" 
                         Margin="0,10,0,0">
-                <Button Content="Auto Detect" Width="120" Command="{Binding AutoDetectCommand}"/>
-                <Button Content="Test"        Width="120" Command="{Binding TestCommand}"/>
+                <Button Content="Auto Detect" Width="120" Command="{Binding AutoDetectCommand}" IsEnabled="{Binding !IsBusy}"/>
+                <Button Content="Test"        Width="120" Command="{Binding TestCommand}" IsEnabled="{Binding !IsBusy}"/>
                 <Button Content="Cancel"      Width="120" Command="{Binding CancelCommand}" HotKey="Escape"/>
-                <Button Content="OK"          Width="120" Command="{Binding AcceptCommand}" HotKey="Enter"/>
+                <Button Content="OK"          Width="120" Command="{Binding AcceptCommand}" HotKey="Enter" IsEnabled="{Binding !IsBusy}"/>
             </StackPanel>
         </StackPanel>
     </DockPanel>
