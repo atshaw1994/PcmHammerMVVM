@@ -4,6 +4,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using PCMHammerAvalonia.ViewModels;
 using System;
 
@@ -130,7 +131,25 @@ public partial class MainWindow : Window
     {
         if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
         {
-            BeginMoveDrag(e);
+            // Don't drag if clicking on a MenuItem or any control within a menu
+            if (!IsWithinMenuItem(e.Source as Visual))
+            {
+                BeginMoveDrag(e);
+            }
         }
+    }
+
+    private static bool IsWithinMenuItem(Visual? source)
+    {
+        Visual? current = source;
+        while (current != null)
+        {
+            if (current is MenuItem or Menu)
+            {
+                return true;
+            }
+            current = current.GetVisualParent();
+        }
+        return false;
     }
 }
